@@ -315,16 +315,37 @@ public class OptifabricSetup implements Runnable {
 			Mixins.addConfiguration("optifabric.compat.cullparticles.mixins.json");
 		}
 
-		if (isPresent("the_aether")) {
+		if (isPresent("the_aether", "<1.17.1-1.5.0")) {
 			Mixins.addConfiguration("optifabric.compat.aether.mixins.json");
 		}
 
 		if (isPresent("stacc")) {
-			Mixins.addConfiguration("optifabric.compat.stacc.mixins.json");
+			injector.predictFuture(RemappingUtils.getClassName("class_2540")).ifPresent(node -> {//PacketByteBuf
+				String desc = RemappingUtils.mapMethodDescriptor("(Lnet/minecraft/class_1799;Z)Lnet/minecraft/class_2540;"); //(ItemStack)PacketByteBuf
+
+				for (MethodNode method : node.methods) {
+					if ("writeItemStack".equals(method.name) && desc.equals(method.desc)) {
+						if (isPresent("stacc", ">=1.2")) {
+							Mixins.addConfiguration("optifabric.compat.stacc.mixins.json");
+						} else {
+							Mixins.addConfiguration("optifabric.compat.stacc.old-mixins.json");
+						}
+						break;
+					}
+				}
+			});
 		}
 
 		if (isPresent("bannerpp")) {
 			Mixins.addConfiguration("optifabric.compat.bannerpp.mixins.json");
+		}
+
+		if (isPresent("replaymod")) {
+			if (isPresent("minecraft", "1.17.x")) {
+				Mixins.addConfiguration("optifabric.compat.replaymod.new-mixins.json");
+			} else {
+				Mixins.addConfiguration("optifabric.compat.replaymod.mixins.json");
+			}
 		}
 	}
 
